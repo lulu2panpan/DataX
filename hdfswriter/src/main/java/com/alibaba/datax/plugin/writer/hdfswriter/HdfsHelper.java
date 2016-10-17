@@ -420,6 +420,12 @@ public  class HdfsHelper {
                 case DOUBLE:
                     objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(Double.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
                     break;
+                case DECIMAL:
+                	objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(HiveDecimal.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
+                	break;
+                case BINARY:
+                	objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(BytesWritable.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
+                	break;
                 case TIMESTAMP:
                     objectInspector = ObjectInspectorFactory.getReflectionObjectInspector(java.sql.Timestamp.class, ObjectInspectorFactory.ObjectInspectorOptions.JAVA);
                     break;
@@ -477,8 +483,8 @@ public  class HdfsHelper {
             for (int i = 0; i < recordLength; i++) {
                 column = record.getColumn(i);
                 //todo as method
-                if (null != column.getRawData()) {
-                    String rowData = column.getRawData().toString();
+				String rowData = column.getRawData() == null ? null : column.getRawData().toString();
+                if (null != column.getRawData() && StringUtils.isNotBlank(rowData)) {              	
                     SupportHiveDataType columnType = SupportHiveDataType.valueOf(
                             columnsConfiguration.get(i).getString(Key.TYPE).toUpperCase());
                     //根据writer端类型配置做类型转换
@@ -502,6 +508,12 @@ public  class HdfsHelper {
                             case DOUBLE:
                                 recordList.add(column.asDouble());
                                 break;
+                            case DECIMAL:
+                            	recordList.add(HiveDecimal.create(column.asBigDecimal()));
+                            	break;
+                            case BINARY:
+                            	recordList.add(new BytesWritable(column.asBytes()));
+                            	break;
                             case STRING:
                             case VARCHAR:
                             case CHAR:
